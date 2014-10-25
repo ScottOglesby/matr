@@ -1,0 +1,6 @@
+# ignore Eclipse files and target files
+.classpath
+.metadata
+.project
+.settings/
+target/
