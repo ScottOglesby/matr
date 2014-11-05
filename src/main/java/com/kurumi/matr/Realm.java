@@ -180,61 +180,103 @@ public class Realm {
       }
    }
 
-	// use crude fractals to make jagged coastline
-	void makeCoastline() {
-		// make indented landmass
-		fillTerrain(landIndent, landIndent,
-                  width - landIndent*2, height - landIndent*2, Square.land);
+   // use crude fractals to make jagged coastline
+   void makeCoastline() {
+	   // make indented landmass
+	   fillTerrain(landIndent, landIndent,
+			   width - landIndent*2, height - landIndent*2, Square.land);
 
-		// randomly take out 9x9 chunks from shoreline
-		// north and south
-      for (int x = landIndent; x < width - landIndent - 9; x += 9) {
-			if ((dice.nextInt() & oddsMask) < eat9x9odds) {
-				fillTerrain(x, landIndent, 9, 9, Square.water);
-			}
-			if ((dice.nextInt() & oddsMask) < eat9x9odds) {
-				fillTerrain(x, height-landIndent-9, 9, 9, Square.water);
-			}
-		}
-		// east and west. Corners have already been looked at
-		for (int y = landIndent + 9; y < height - landIndent - 18; y += 9) {
-			if ((dice.nextInt() & oddsMask) < eat9x9odds) {
-				fillTerrain(landIndent, y, 9, 9, Square.water);
-			}
-			if ((dice.nextInt() & oddsMask) < eat9x9odds) {
-				fillTerrain(width-landIndent-9, y, 9, 9, Square.water);
-			}
-      }
+	   // randomly take out 9x9 chunks from shoreline
+	   // north and south
+	   for (int x = landIndent; x < width - landIndent - 9; x += 9) {
+		   if ((dice.nextInt() & oddsMask) < eat9x9odds) {
+			   fillTerrain(x, landIndent, 9, 9, Square.water);
+		   }
+		   if ((dice.nextInt() & oddsMask) < eat9x9odds) {
+			   fillTerrain(x, height-landIndent-9, 9, 9, Square.water);
+		   }
+	   }
+	   // east and west. Corners have already been looked at
+	   for (int y = landIndent + 9; y < height - landIndent - 18; y += 9) {
+		   if ((dice.nextInt() & oddsMask) < eat9x9odds) {
+			   fillTerrain(landIndent, y, 9, 9, Square.water);
+		   }
+		   if ((dice.nextInt() & oddsMask) < eat9x9odds) {
+			   fillTerrain(width-landIndent-9, y, 9, 9, Square.water);
+		   }
+	   }
 
-		// randomly add or subtract 3x3 chunks
-		// north and south
-		for (int x = landIndent; x < width - landIndent - 9; x += 9) {
-         do3x3block(x, landIndent);
-         do3x3block(x, height-landIndent-9);
-		}
-		// east and west
-		for (int y = landIndent + 9; y < height - landIndent - 18; y += 9) {
-         do3x3block(landIndent, y);
-         do3x3block(width-landIndent-9, y);
-		}
+	   // randomly add or subtract 3x3 chunks
+	   // north and south
+	   for (int x = landIndent; x < width - landIndent - 9; x += 9) {
+		   do3x3block(x, landIndent);
+		   do3x3block(x, height-landIndent-9);
+	   }
+	   // east and west
+	   for (int y = landIndent + 9; y < height - landIndent - 18; y += 9) {
+		   do3x3block(landIndent, y);
+		   do3x3block(width-landIndent-9, y);
+	   }
 
-      // now fix:        .L
-      //        bowties  L.    and slab corners
-		for (int x = 0; x < width-1; x++) {
-         for (int y = 0; y < height-1; y++) {
-            if (x > 0 && y > 0) {
-               fixslab(x, y);
-            }
-            int ul =  grid[x][y].getTerrain();
-            int ur =  grid[x+1][y].getTerrain();
-            int ll =  grid[x][y+1].getTerrain();
-            int lr =  grid[x+1][y+1].getTerrain();
-            if (ul == lr && ur == ll && ul != ur) {
-               fillTerrain(x, y, 2, 2, Square.land);
-            }
-         }
-      }
-	}
+	   // now fix:        .L
+	   //        bowties  L.    and slab corners
+	   for (int x = 0; x < width-1; x++) {
+		   for (int y = 0; y < height-1; y++) {
+			   if (x > 0 && y > 0) {
+				   fixslab(x, y);
+			   }
+			   int ul =  grid[x][y].getTerrain();
+			   int ur =  grid[x+1][y].getTerrain();
+			   int ll =  grid[x][y+1].getTerrain();
+			   int lr =  grid[x+1][y+1].getTerrain();
+			   if (ul == lr && ur == ll && ul != ur) {
+				   fillTerrain(x, y, 2, 2, Square.land);
+			   }
+		   }
+	   }
+
+	   // new feature: smooth out jaggies in shoreline by setting display hints
+	   // try northwest first
+	   // 7 6 5
+	   // 0 . 4
+	   // 1 2 3
+	   // index by the bit positions above: land is 1, water is 0
+	   //           0   1  2  3  4   5   6   7
+	   int[] dx = {-1, -1, 0, 1, 1,  1,  0, -1};
+	   int[] dy = { 0,  1, 1, 1, 0, -1, -1, -1};
+	   // following are bit masks to compare your surroundings with
+	   int nw = (1 << 0) + (1 << 7) + (1 << 6);
+	   int se = (1 << 2) + (1 << 3) + (1 << 4);
+	   int ne = (1 << 6) + (1 << 5) + (1 << 4);
+	   int sw = (1 << 0) + (1 << 1) + (1 << 2);
+	   for (int x = 1; x < width-1; x++) {
+		   for (int y = 1; y < height-1; y++) {
+			   // we expand into water -- not shave off land
+			   if (grid[x][y].getTerrain() == Square.land) {
+				   continue;
+			   }
+			   int surroundingLands = 0;
+			   for (int i = 0; i <= 7; i++) {
+				   if (grid[x+dx[i]][y+dy[i]].getTerrain() == Square.land) {
+					   surroundingLands += (1 << i);
+				   }
+			   }
+			   // I believe no more than one of the following can be true
+			   if ((surroundingLands & nw) == nw && (surroundingLands & se) == 0) {
+				   grid[x][y].setDisplayHint(Square.water_se);
+			   }
+			   if ((surroundingLands & ne) == ne && (surroundingLands & sw) == 0) {
+				   grid[x][y].setDisplayHint(Square.water_sw);
+			   }
+			   if ((surroundingLands & se) == se && (surroundingLands & nw) == 0) {
+				   grid[x][y].setDisplayHint(Square.water_nw);
+			   }
+			   if ((surroundingLands & sw) == sw && (surroundingLands & ne) == 0) {
+				   grid[x][y].setDisplayHint(Square.water_ne);
+			   }
+		   }
+	   }
+   }
 
    //---------------------- town stuff
 	// clear all marked squares

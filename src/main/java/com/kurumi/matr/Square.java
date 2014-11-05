@@ -9,7 +9,13 @@ public class Square {
 
 	public static final int water = 0;
 	public static final int land = 1;
-
+	
+	public static final int hint_none = 0;  // just water or land as i
+	public static final int water_nw = 1; // water to NW, land to SE
+	public static final int water_ne = 2;
+	public static final int water_se = 3;
+	public static final int water_sw = 4;
+	
 	// how wide is square?
 	public static final double miles = 0.2;
 
@@ -22,6 +28,9 @@ public class Square {
 	private byte terrain; // water or land
 	private byte town = 0;  // town ID; index into Realm.towns[]
 	private boolean marked = false;
+	
+	private int displayHint = 0;
+	
 	Junction junc = null;
 
 	Square() {
@@ -80,5 +89,19 @@ public class Square {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * @return the displayHint
+	 */
+	public int getDisplayHint() {
+		return displayHint;
+	}
+
+	/**
+	 * @param displayHint the displayHint to set
+	 */
+	public void setDisplayHint(int displayHint) {
+		this.displayHint = displayHint;
 	}
 }

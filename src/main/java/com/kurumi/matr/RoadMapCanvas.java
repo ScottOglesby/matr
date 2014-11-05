@@ -2,6 +2,7 @@ package com.kurumi.matr;
 
 import java.awt.*;
 import java.util.Vector;
+
 import com.kurumi.matr.MatrPanel;
 import com.kurumi.matr.MapFrame;
 
@@ -290,22 +291,55 @@ public class RoadMapCanvas extends Canvas {
    // using white background chopped redraw in half (100->50 ms)
    private void drawWater(Graphics g)
    {
-      int x0, y0, x1, y1;
-      g.setColor(MapUtils.oceanColor);
-      // determine clipping region
-      Rectangle myRect = viewport.intersection(fullViewPort);
+	   int x0, y0, x1, y1;
+	   g.setColor(MapUtils.oceanColor);
+	   // determine clipping region
+	   Rectangle myRect = viewport.intersection(fullViewPort);
 
-      for (int xx = myRect.x; xx < myRect.x + myRect.width; xx++) {
-         for (int yy = myRect.y; yy < myRect.y + myRect.height; yy++) {
-            if (myRealm.grid[xx][yy].getTerrain() == Square.water) {
-               x0 = sqToXPixel(xx);
-               x1 = sqToXPixel(xx+1);
-               y0 = sqToYPixel(yy);
-               y1 = sqToYPixel(yy+1);
-               g.fillRect(x0, y0, x1-x0, y1-y0);
-            }
-         }
-      }
+	   for (int xx = myRect.x; xx < myRect.x + myRect.width; xx++) {
+		   for (int yy = myRect.y; yy < myRect.y + myRect.height; yy++) {
+			   x0 = sqToXPixel(xx);
+			   x1 = sqToXPixel(xx+1);
+			   y0 = sqToYPixel(yy);
+			   y1 = sqToYPixel(yy+1);
+			   // debugging: draw circle if you would have drawn water southeast
+			   if (myRealm.grid[xx][yy].getDisplayHint() == Square.water_se) {
+				   Polygon po = new Polygon();
+				   po.addPoint(x0, y1);
+				   po.addPoint(x1, y1);
+				   po.addPoint(x1, y0);
+				   g.fillPolygon(po);
+			   }
+			   else 
+				   if (myRealm.grid[xx][yy].getDisplayHint() == Square.water_sw) {
+					   Polygon po = new Polygon();
+					   po.addPoint(x0, y0);
+					   po.addPoint(x0, y1);
+					   po.addPoint(x1, y1);
+					   g.fillPolygon(po);
+				   }
+				   else 
+					   if (myRealm.grid[xx][yy].getDisplayHint() == Square.water_nw) {
+						   Polygon po = new Polygon();
+						   po.addPoint(x0, y0);
+						   po.addPoint(x0, y1);
+						   po.addPoint(x1, y0);
+						   g.fillPolygon(po);
+					   }
+					   else 
+						   if (myRealm.grid[xx][yy].getDisplayHint() == Square.water_ne) {
+							   Polygon po = new Polygon();
+							   po.addPoint(x0, y0);
+							   po.addPoint(x1, y0);
+							   po.addPoint(x1, y1);
+							   g.fillPolygon(po);
+						   }
+						   else 
+							   if (myRealm.grid[xx][yy].getTerrain() == Square.water) {
+								   g.fillRect(x0, y0, x1-x0, y1-y0);
+							   }
+		   }
+	   }
    }
 
    // draw all route markers where needed.
